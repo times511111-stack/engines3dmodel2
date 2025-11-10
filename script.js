@@ -1,16 +1,16 @@
-// Простая сцена для 3D модели
+// ГЏГ°Г®Г±ГІГ Гї Г±Г¶ГҐГ­Г  Г¤Г«Гї 3D Г¬Г®Г¤ГҐГ«ГЁ
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Загрузка модели
+// Г‡Г ГЈГ°ГіГ§ГЄГ  Г¬Г®Г¤ГҐГ«ГЁ
 const loader = new THREE.GLTFLoader();
-loader.load('engine3dmodel.glb', function (gltf) {
+loader.load('cube.glb', function (gltf) {
     scene.add(gltf.scene);
 
-    // Автоматическое воспроизведение анимации
+    // ГЂГўГІГ®Г¬Г ГІГЁГ·ГҐГ±ГЄГ®ГҐ ГўГ®Г±ГЇГ°Г®ГЁГ§ГўГҐГ¤ГҐГ­ГЁГҐ Г Г­ГЁГ¬Г Г¶ГЁГЁ
     const mixer = new THREE.AnimationMixer(gltf.scene);
     gltf.animations.forEach((clip) => {
         mixer.clipAction(clip).play();
@@ -18,10 +18,11 @@ loader.load('engine3dmodel.glb', function (gltf) {
 
     function animate() {
         requestAnimationFrame(animate);
-        mixer.update(0.016); // Обновление анимации
+        mixer.update(0.016); // ГЋГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ Г Г­ГЁГ¬Г Г¶ГЁГЁ
         renderer.render(scene, camera);
     }
     animate();
 });
+
 
 camera.position.z = 5;

@@ -1,3 +1,62 @@
+// Добавьте в начало
+let mouse = { x: 0, y: 0 };
+let targetRotationX = 0;
+let targetRotationY = 0;
+
+// В загрузке модели
+loader.load('ваша-модель.glb', function(gltf) {
+    model = gltf.scene;
+    scene.add(model);
+    
+    // Автоматическое вращение когда мышка не используется
+    targetRotationY = model.rotation.y;
+    
+    // Обновите функцию animate
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        // Плавное вращение к цели
+        if (model) {
+            model.rotation.y += (targetRotationY - model.rotation.y) * 0.05;
+            model.rotation.x += (targetRotationX - model.rotation.x) * 0.05;
+        }
+        
+        renderer.render(scene, camera);
+    }
+    animate();
+});
+
+// Обработчики мыши
+renderer.domElement.addEventListener('mousedown', (event) => {
+    isMouseDown = true;
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+});
+
+renderer.domElement.addEventListener('mousemove', (event) => {
+    if (!isMouseDown || !model) return;
+    
+    const deltaX = event.clientX - mouse.x;
+    const deltaY = event.clientY - mouse.y;
+    
+    targetRotationY += deltaX * 0.01;
+    targetRotationX += deltaY * 0.01;
+    
+    // Ограничение вращения по X чтобы модель не переворачивалась
+    targetRotationX = Math.max(-Math.PI/2, Math.min(Math.PI/2, targetRotationX));
+    
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+});
+
+renderer.domElement.addEventListener('mouseup', () => {
+    isMouseDown = false;
+});
+
+// Вращение когда мышка не используется
+renderer.domElement.addEventListener('mouseleave', () => {
+    isMouseDown = false;
+});
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer();
@@ -52,3 +111,4 @@ loader.load(
         console.error('Ошибка загрузки модели', error);
     }
 );
+

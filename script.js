@@ -86,4 +86,10 @@ function onMouseMove(event) {
 function onMouseUp() {
     isMouseDown = false;
 }
+if (gltf.animations && gltf.animations.length > 0) {
+    gltf.animations.forEach((clip) => {
+        mixer.clipAction(clip).play();
+    });
+
 // === КОНЕЦ ФАЙЛА ===
+

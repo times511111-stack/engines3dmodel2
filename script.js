@@ -22,29 +22,41 @@ scene.add(directionalLight);
 // === ЗАГРУЗЧИК МОДЕЛИ ===
 const loader = new THREE.GLTFLoader();
 
-// === ЗАГРУЗКА МОДЕЛИ - ВАЖНО: название engine3dmodel.glb ===
+// === ЗАГРУЗКА МОДЕЛИ ===
 loader.load('engine3dmodel.glb', function(gltf) {
     console.log("✅ Модель загружена!");
     model = gltf.scene;
     scene.add(model);
     
+    // ДИАГНОСТИКА: проверяем какие анимации есть
+    console.log("Найдено анимаций:", gltf.animations ? gltf.animations.length : 0);
+    if (gltf.animations) {
+        gltf.animations.forEach((clip, index) => {
+            console.log(`Анимация ${index}: ${clip.name}`);
+        });
+    }
+    
     // Автоматическое воспроизведение анимации
     const mixer = new THREE.AnimationMixer(model);
     if (gltf.animations && gltf.animations.length > 0) {
         gltf.animations.forEach((clip) => {
-            mixer.clipAction(clip).play();
+            const action = mixer.clipAction(clip);
+            action.play();
+            console.log(`Запущена анимация: ${clip.name}`);
         });
         
         // Анимационный цикл
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
-            mixer.update(clock.getDelta());
+            const delta = clock.getDelta();
+            mixer.update(delta);
             renderer.render(scene, camera);
         }
         animate();
     } else {
-        // Если анимаций нет
+        console.warn("⚠️ В модели нет анимаций!");
+        // Если анимаций нет - просто отрисовываем сцену
         function animate() {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
@@ -52,6 +64,9 @@ loader.load('engine3dmodel.glb', function(gltf) {
         animate();
     }
     
+}, function(progress) {
+    // Прогресс загрузки
+    console.log("📊 Загружено:", progress.loaded);
 }, function(error) {
     console.error("❌ Ошибка загрузки:", error);
 });
@@ -62,6 +77,7 @@ camera.position.z = 5;
 renderer.domElement.addEventListener('mousedown', onMouseDown);
 renderer.domElement.addEventListener('mousemove', onMouseMove);
 renderer.domElement.addEventListener('mouseup', onMouseUp);
+renderer.domElement.addEventListener('mouseleave', onMouseUp); // Добавил для случая когда мышь уходит с canvas
 
 function onMouseDown(event) {
     isMouseDown = true;
@@ -86,10 +102,4 @@ function onMouseMove(event) {
 function onMouseUp() {
     isMouseDown = false;
 }
-if (gltf.animations && gltf.animations.length > 0) {
-    gltf.animations.forEach((clip) => {
-        mixer.clipAction(clip).play();
-    });
-
 // === КОНЕЦ ФАЙЛА ===
-

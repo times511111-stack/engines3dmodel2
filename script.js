@@ -4,101 +4,49 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// === ПЕРЕМЕННЫЕ ДЛЯ МЫШКИ ===
-let isMouseDown = false;
-let previousMouseX = 0;
-let previousMouseY = 0;
-let model = null;
+// Освещение
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(5, 5, 5);
+scene.add(light);
 
-// === ОСВЕЩЕНИЕ ===
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+const ambientLight = new THREE.AmbientLight(0x404040);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-directionalLight.position.set(10, 10, 5);
-scene.add(directionalLight);
-
-// === ЗАГРУЗЧИК МОДЕЛИ ===
+// Загрузка модели
 const loader = new THREE.GLTFLoader();
-
-// === ЗАГРУЗКА МОДЕЛИ ===
-loader.load('engine3dmodel.glb', function(gltf) {
-    console.log("✅ Модель загружена!");
-    model = gltf.scene;
-    scene.add(model);
-    
-    // ДИАГНОСТИКА: проверяем какие анимации есть
-    console.log("Найдено анимаций:", gltf.animations ? gltf.animations.length : 0);
-    if (gltf.animations) {
-        gltf.animations.forEach((clip, index) => {
-            console.log(`Анимация ${index}: ${clip.name}`);
-        });
-    }
-    
-    // Автоматическое воспроизведение анимации
-    const mixer = new THREE.AnimationMixer(model);
-    if (gltf.animations && gltf.animations.length > 0) {
-        gltf.animations.forEach((clip) => {
-            const action = mixer.clipAction(clip);
-            action.play();
-            console.log(`Запущена анимация: ${clip.name}`);
-        });
+loader.load('engine3dmodel.glb', 
+    function(gltf) {
+        console.log("✅ Модель загружена успешно!");
+        scene.add(gltf.scene);
         
-        // Анимационный цикл
-        const clock = new THREE.Clock();
+        // Автоповорот для демонстрации
         function animate() {
             requestAnimationFrame(animate);
-            const delta = clock.getDelta();
-            mixer.update(delta);
+            gltf.scene.rotation.y += 0.01;
             renderer.render(scene, camera);
         }
         animate();
-    } else {
-        console.warn("⚠️ В модели нет анимаций!");
-        // Если анимаций нет - просто отрисовываем сцену
+    },
+    function(progress) {
+        console.log("Загрузка: " + (progress.loaded / progress.total * 100) + "%");
+    },
+    function(error) {
+        console.error("❌ Ошибка загрузки модели:", error);
+        // Если модель не загружается, покажем куб
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+        camera.position.z = 5;
+        
         function animate() {
             requestAnimationFrame(animate);
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
             renderer.render(scene, camera);
         }
         animate();
     }
-    
-}, function(progress) {
-    // Прогресс загрузки
-    console.log("📊 Загружено:", progress.loaded);
-}, function(error) {
-    console.error("❌ Ошибка загрузки:", error);
-});
+);
 
 camera.position.z = 5;
-
-// === ФУНКЦИИ ДЛЯ МЫШКИ ===
-renderer.domElement.addEventListener('mousedown', onMouseDown);
-renderer.domElement.addEventListener('mousemove', onMouseMove);
-renderer.domElement.addEventListener('mouseup', onMouseUp);
-renderer.domElement.addEventListener('mouseleave', onMouseUp); // Добавил для случая когда мышь уходит с canvas
-
-function onMouseDown(event) {
-    isMouseDown = true;
-    previousMouseX = event.clientX;
-    previousMouseY = event.clientY;
-}
-
-function onMouseMove(event) {
-    if (!isMouseDown || !model) return;
-    
-    const deltaX = event.clientX - previousMouseX;
-    const deltaY = event.clientY - previousMouseY;
-    
-    // Вращение модели
-    model.rotation.y += deltaX * 0.01;
-    model.rotation.x += deltaY * 0.01;
-    
-    previousMouseX = event.clientX;
-    previousMouseY = event.clientY;
-}
-
-function onMouseUp() {
-    isMouseDown = false;
-}
-// === КОНЕЦ ФАЙЛА ===

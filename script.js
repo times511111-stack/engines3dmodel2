@@ -1,52 +1,42 @@
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-// Освещение
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(5, 5, 5);
-scene.add(light);
-
-const ambientLight = new THREE.AmbientLight(0x404040);
-scene.add(ambientLight);
-
-// Загрузка модели
-const loader = new THREE.GLTFLoader();
-loader.load('engine3dmodel.glb', 
-    function(gltf) {
-        console.log("✅ Модель загружена успешно!");
-        scene.add(gltf.scene);
+loader.load('engine3dmodel.glb', function(gltf) {
+    console.log("✅ Модель загружена!");
+    model = gltf.scene;
+    scene.add(model);
+    
+    // ДИАГНОСТИКА: выводим ВСЕ объекты модели
+    console.log("=== СТРУКТУРА МОДЕЛИ ===");
+    model.traverse((child) => {
+        if (child.isMesh) {
+            console.log(`Объект: ${child.name}`);
+        }
+    });
+    
+    // Остальной код без изменений...
+    const mixer = new THREE.AnimationMixer(model);
+    if (gltf.animations && gltf.animations.length > 0) {
+        console.log("Найдено анимаций:", gltf.animations.length);
+        gltf.animations.forEach((clip, index) => {
+            console.log(`Анимация ${index}: ${clip.name}`);
+            mixer.clipAction(clip).play();
+        });
         
-        // Автоповорот для демонстрации
+        const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
-            gltf.scene.rotation.y += 0.01;
+            mixer.update(clock.getDelta());
             renderer.render(scene, camera);
         }
         animate();
-    },
-    function(progress) {
-        console.log("Загрузка: " + (progress.loaded / progress.total * 100) + "%");
-    },
-    function(error) {
-        console.error("❌ Ошибка загрузки модели:", error);
-        // Если модель не загружается, покажем куб
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
-        camera.position.z = 5;
-        
+    } else {
+        // Если анимаций нет
         function animate() {
             requestAnimationFrame(animate);
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
             renderer.render(scene, camera);
         }
         animate();
     }
-);
-
-camera.position.z = 5;
+}, function(progress) {
+    console.log("📊 Загружено:", progress.loaded);
+}, function(error) {
+    console.error("❌ Ошибка загрузки:", error);
+});

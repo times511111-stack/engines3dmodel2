@@ -1,24 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test</title>
+    <title>3D Двигатель</title>
     <style>body { margin: 0; }</style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
-    <script>
-        // Проверяем доступность файла
-        fetch('engine3dmodel.glb')
-            .then(response => {
-                console.log('Status:', response.status);
-                console.log('Size:', response.headers.get('content-length'));
-                return response.arrayBuffer();
-            })
-            .then(buffer => {
-                console.log('File size:', buffer.byteLength, 'bytes');
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-            });
-    </script>
+    <div id="info" style="position:absolute; top:10px; left:10px; color:white; background:rgba(0,0,0,0.7); padding:10px;">
+        Загрузка...
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>

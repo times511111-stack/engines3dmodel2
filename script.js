@@ -4,23 +4,11 @@ let isMouseDown = false;
 let previousMouseX = 0;
 let previousMouseY = 0;
 
-// Функция для обновления статуса (безопасная)
-function updateStatus(message) {
-    const statusElement = document.getElementById('status');
-    if (statusElement) {
-        statusElement.textContent = message;
-    }
-    console.log(message);
-}
-
 // Инициализация сцены
 function init() {
-    console.log('🚀 Инициализация 3D сцены...');
-    updateStatus('🚀 Загрузка 3D...');
-    
-    // Создаем сцену с ЧЁРНЫМ фоном
+    // Создаем сцену с чёрным фоном
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000); // Чёрный фон
+    scene.background = new THREE.Color(0x000000);
     
     // Создаем камеру
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -39,18 +27,42 @@ function init() {
     directionalLight.position.set(10, 10, 5);
     scene.add(directionalLight);
     
-    // Сразу создаем тестовую модель
-    createTestModel();
-    updateStatus('✅ Тестовый двигатель загружен');
-    
-    // Пытаемся загрузить основную модель
-    loadMainModel();
+    // Загружаем модель
+    loadModel();
     
     // Настройка управления
     setupControls();
     
     // Запуск анимации
     animate();
+}
+
+// Загрузка модели
+function loadModel() {
+    if (typeof THREE.GLTFLoader === 'undefined') {
+        createTestModel();
+        return;
+    }
+    
+    const loader = new THREE.GLTFLoader();
+    
+    loader.load(
+        'engine3dmodel.glb',
+        // Успешная загрузка
+        function(gltf) {
+            currentModel = gltf.scene;
+            scene.add(currentModel);
+            
+            // Центрируем модель
+            const box = new THREE.Box3().setFromObject(currentModel);
+            const center = box.getCenter(new THREE.Vector3());
+            currentModel.position.sub(center);
+        },
+        // Ошибка загрузки
+        function(error) {
+            createTestModel();
+        }
+    );
 }
 
 // Создание тестовой модели
@@ -85,58 +97,6 @@ function createTestModel() {
     
     scene.add(group);
     currentModel = group;
-}
-
-// Загрузка основной модели
-function loadMainModel() {
-    if (typeof THREE.GLTFLoader === 'undefined') {
-        console.log('GLTFLoader не доступен');
-        return;
-    }
-    
-    const loader = new THREE.GLTFLoader();
-    
-    loader.load(
-        'engine3dmodel.glb',
-        // Успешная загрузка
-        function(gltf) {
-            console.log('✅ Основная модель загружена!');
-            updateStatus('✅ Основная модель загружена');
-            
-            // Удаляем тестовую модель
-            if (currentModel) {
-                scene.remove(currentModel);
-            }
-            
-            // Добавляем основную модель
-            currentModel = gltf.scene;
-            scene.add(currentModel);
-            
-            // Центрируем модель
-            const box = new THREE.Box3().setFromObject(currentModel);
-            const center = box.getCenter(new THREE.Vector3());
-            currentModel.position.sub(center);
-            
-            // ЗАКОММЕНТИРОВАНО: автоматическое воспроизведение анимаций
-            // if (gltf.animations && gltf.animations.length > 0) {
-            //     const mixer = new THREE.AnimationMixer(currentModel);
-            //     gltf.animations.forEach(clip => {
-            //         mixer.clipAction(clip).play();
-            //     });
-            //     scene.userData.mixer = mixer;
-            // }
-        },
-        // Прогресс загрузки
-        function(progress) {
-            const percent = (progress.loaded / (progress.total || 1)) * 100;
-            updateStatus(`📥 Загрузка модели... ${percent.toFixed(1)}%`);
-        },
-        // Ошибка загрузки
-        function(error) {
-            console.log('ℹ️ Основная модель не загружена');
-            updateStatus('✅ Тестовый двигатель (основная модель не найдена)');
-        }
-    );
 }
 
 // Настройка управления
@@ -176,26 +136,9 @@ function setupControls() {
     });
 }
 
-// Анимация
+// Анимация - ТОЛЬКО отрисовка, без вращения
 function animate() {
     requestAnimationFrame(animate);
-    
-    // ЗАКОММЕНТИРОВАНО: автоматическое вращение модели
-    // if (currentModel) {
-    //     currentModel.rotation.y += 0.005;
-    // }
-    
-    // ЗАКОММЕНТИРОВАНО: анимация поршней тестовой модели
-    // if (currentModel && currentModel.children.length >= 6) {
-    //     const time = Date.now() * 0.005;
-    //     for (let i = 1; i <= 4; i++) {
-    //         const piston = currentModel.children[i];
-    //         if (piston) {
-    //             piston.position.y = 0.5 + Math.sin(time + i) * 0.3;
-    //         }
-    //     }
-    // }
-    
     renderer.render(scene, camera);
 }
 
